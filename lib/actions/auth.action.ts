@@ -1,6 +1,7 @@
 'use server';
 
 import { auth, db } from "@/firebase/admin";
+import { Auth } from "firebase-admin/auth";
 import { CollectionReference, DocumentData } from "firebase-admin/firestore";
 import { cookies } from "next/headers";
 const ONE_WEEK = 60 * 60 * 24 * 7;
@@ -38,27 +39,35 @@ export async function signUp(params: SignUpParams){
         }
     }
 }
-export async function signIn(params: SignInParams){
-    const {email, idToken} = params;
+export async function signIn(params: SignInParams) {
+  const { email, idToken } = params;
 
-    try {
-        const userRecord = await auth.getUserByEmail(email);
+  try {
+    const userRecord = await auth.getUserByEmail(email); // ✅ this will work if auth is from admin.auth()
 
-        if(!userRecord){
-            return{
-                success:false,
-                message: 'User does not exist. Create an account instead.'
-            }
-        }
-        await setSessionCookie(idToken);
-    } catch (error) {
-        console.log(error);
-        return {
-            success:false,
-            message: 'Failed to log into an account.'
-        }
+    if (!userRecord) {
+      return {
+        success: false,
+        message: 'User does not exist. Create an account instead.'
+      };
     }
+
+    await setSessionCookie(idToken);
+
+    return {
+      success: true,
+      message: 'Signed in successfully'
+    };
+  } catch (error) {
+    console.error('Error during signIn:', error);
+
+    return {
+      success: false,
+      message: 'Failed to log into an account.'
+    };
+  }
 }
+
 export async function setSessionCookie(idToken: string) {
     const cookieStore = await cookies();
     const sessionCookie = await auth.createSessionCookie(idToken,{
