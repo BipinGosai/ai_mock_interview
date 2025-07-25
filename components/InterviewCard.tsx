@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Federant } from 'next/font/google';
 import DisplayTechIcons from './DisplayTechIcons';
 const InterviewCard = ({interviewId, userId, role, type, techstack, createdAt} :InterviewCardProps) => {
-    const feedback = null as Feedback null;
+    const feedback: Feedback | null = null;
     const normalizedType =/mix/gi.test(type) ? 'Mixed' : type;
     const formattedDate = dayjs(feedback ?.createdAt || createdAt || Date.now()).format('MMM D,YYYY');
   return (
