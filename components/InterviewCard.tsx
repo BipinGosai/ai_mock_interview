@@ -5,7 +5,8 @@ import { Button } from './ui/button';
 import Link from 'next/link';
 import { Federant } from 'next/font/google';
 import DisplayTechIcons from './DisplayTechIcons';
-const InterviewCard = ({interviewId, userId, role, type, techstack, createdAt} :InterviewCardProps) => {
+import { id } from 'zod/v4/locales';
+const InterviewCard = ({id , userId, role, type, techstack, createdAt} :InterviewCardProps) => {
     const feedback: Feedback | null = null;
     const normalizedType =/mix/gi.test(type) ? 'Mixed' : type;
     const formattedDate = dayjs(feedback ?.createdAt || createdAt || Date.now()).format('MMM D,YYYY');
@@ -37,8 +38,8 @@ const InterviewCard = ({interviewId, userId, role, type, techstack, createdAt} :
                         <DisplayTechIcons techStack={techstack}/>
                         <Button className='btn-primary'>
                             <Link href={feedback
-                                ? `/interview/${interviewId}/feedback`
-                                : `/interview/${interviewId}`
+                                ? `/interview/${id}/feedback`
+                                : `/interview/${id}`
                             }>
                                 {feedback ? 'Check Feedback' : 'View Interview'}
                             </Link>
