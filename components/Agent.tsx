@@ -91,35 +91,63 @@ const Agent = ({userName, userId,type,interviewId,questions}: AgentProps) => {
     },[messages, callStatus, type, userId]);
 
     const handleCall = async () => {
-    setCallStatus(CallStatus.CONNECTING);
+        try {
+            console.log('Starting interview...');
+            setCallStatus(CallStatus.CONNECTING);
+            
+            // Check if VAPI token is available
+            if (!process.env.NEXT_PUBLIC_VAPI_WEB_TOKEN) {
+                console.error('VAPI token is not configured');
+                alert('Error: VAPI token is not configured. Please contact support.');
+                setCallStatus(CallStatus.INACTIVE);
+                return;
+            }
 
-    if (type === "generate") {
-      await vapi.start(
-        undefined,
-        undefined,
-        undefined,
-        process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!,
-        {
-          variableValues: {
-            username: userName,
-            userid: userId,
-          },
+            if (type === "generate") {
+                console.log('Starting workflow interview...');
+                if (!process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID) {
+                    console.error('Workflow ID is not configured');
+                    alert('Error: Workflow ID is not configured. Please contact support.');
+                    setCallStatus(CallStatus.INACTIVE);
+                    return;
+                }
+                
+                await vapi.start(
+                    undefined,
+                    undefined,
+                    undefined,
+                    process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID,
+                    {
+                        variableValues: {
+                            username: userName,
+                            userid: userId,
+                        },
+                    }
+                );
+            } else {
+                console.log('Starting standard interview...');
+                let formattedQuestions = "";
+                if (questions && questions.length > 0) {
+                    formattedQuestions = questions
+                        .map((question) => `- ${question}`)
+                        .join("\n");
+                } else {
+                    console.log('No questions provided, using default questions');
+                    formattedQuestions = "- Tell me about yourself\n- What are your strengths?\n- Why do you want this role?";
+                }
+
+                await vapi.start(interviewer, {
+                    variableValues: {
+                        questions: formattedQuestions,
+                    },
+                });
+            }
+            console.log('Interview started successfully');
+        } catch (error) {
+            console.error('Error starting interview:', error);
+            alert(`Failed to start interview: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            setCallStatus(CallStatus.INACTIVE);
         }
-      );
-    } else {
-      let formattedQuestions = "";
-      if (questions) {
-        formattedQuestions = questions
-          .map((question) => `- ${question}`)
-          .join("\n");
-      }
-
-      await vapi.start(interviewer, {
-        variableValues: {
-          questions: formattedQuestions,
-        },
-      });
-    }
   };
 
     const handleDisconnect = async() => {
