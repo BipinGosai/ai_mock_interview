@@ -18,7 +18,17 @@ interface SavedMessage {
     role : 'user' | 'system' | 'assistant';
     content: string;
 }
-const Agent = ({userName, userId,type,interviewId,questions}: AgentProps) => {
+type InterviewType = 'generate' | 'interview';
+
+interface AgentProps {
+    userName: string;
+    userId: string;
+    type: InterviewType;
+    interviewId?: string;
+    questions?: string[];
+}
+
+const Agent = ({userName, userId, type, interviewId, questions}: AgentProps) => {
     const router = useRouter();
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
@@ -105,26 +115,34 @@ const Agent = ({userName, userId,type,interviewId,questions}: AgentProps) => {
 
             if (type === "generate") {
                 console.log('Starting workflow interview...');
+                // Fallback to standard interview if workflow ID is not configured
                 if (!process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID) {
-                    console.error('Workflow ID is not configured');
-                    alert('Error: Workflow ID is not configured. Please contact support.');
-                    setCallStatus(CallStatus.INACTIVE);
-                    return;
-                }
-                
-                await vapi.start(
-                    undefined,
-                    undefined,
-                    undefined,
-                    process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID,
-                    {
-                        variableValues: {
-                            username: userName,
-                            userid: userId,
-                        },
+                    console.log('Workflow ID not found, falling back to standard interview');
+                    // Use the standard interview flow by continuing to the next section
+                } else {
+                    try {
+                        await vapi.start(
+                            undefined,
+                            undefined,
+                            undefined,
+                            process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID,
+                            {
+                                variableValues: {
+                                    username: userName,
+                                    userid: userId,
+                                },
+                            }
+                        );
+                        return; // Exit if workflow interview starts successfully
+                    } catch (error) {
+                        console.error('Error starting workflow interview, falling back to standard:', error);
+                        // Continue to standard interview flow on error
                     }
-                );
-            } else {
+                }
+            }
+            
+            // Standard interview flow (fallback or direct)
+            if (type === 'interview' || !process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID) {
                 console.log('Starting standard interview...');
                 let formattedQuestions = "";
                 if (questions && questions.length > 0) {
