@@ -7,9 +7,17 @@ interface FormFieldProps<T extends FieldValues>{
     name: Path<T>;
     label: string;
     placeholder: string;
-    type?: 'text' | 'email' | 'password' | 'file'
+    type?: 'text' | 'email' | 'password' | 'file';
+    className?: string;
 }
-const FormField = ({control, name, label, placeholder, type = "text"}: FormFieldProps<T>) => (
+const FormField = <T extends FieldValues>({
+    control, 
+    name, 
+    label, 
+    placeholder, 
+    type = "text",
+    className = ''
+}: FormFieldProps<T>) => (
     <Controller 
         name={name}
         control={control}
@@ -18,7 +26,7 @@ const FormField = ({control, name, label, placeholder, type = "text"}: FormField
                 <FormLabel className='label'>{label}</FormLabel>
                 <FormControl>
                     <Input 
-                        className="input"
+                        className={`input ${className}`}
                         placeholder={placeholder}
                         type={type}
                         {...field}

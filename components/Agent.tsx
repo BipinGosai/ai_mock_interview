@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useState,useEffect } from 'react';
 import { vapi } from '@/lib/vapi.sdk';
 import { interviewer } from '@/constants';
+import { createFeedback } from '@/lib/actions/general.action';
 
 enum CallStatus{
     INACTIVE = 'INACTIVE',
@@ -62,10 +63,11 @@ const Agent = ({userName, userId,type,interviewId,questions}: AgentProps) => {
     const handleGenerateFeedback = async (messages : SavedMessage[]) => {
         console.log('Generate feedback here.');
 
-        const{ success,id} = {
-            success: true,
-            id: 'feedback-id'
-        }
+        const{ success,feedbackId:id} = await createFeedback({
+            interviewId: interviewId!,
+            userId: userId!,
+            transcript: messages
+        })
 
         if (success && id) {
             router.push(`/interview/${interviewId}/feedback`);
@@ -121,9 +123,17 @@ const Agent = ({userName, userId,type,interviewId,questions}: AgentProps) => {
   };
 
     const handleDisconnect = async() => {
-        setCallStatus(CallStatus.FINISHED);
-
-        vapi.stop();
+        try {
+            // Stop the call and handle any cleanup
+            await vapi.stop();
+            
+            // Update status after successful stop
+            setCallStatus(CallStatus.FINISHED);
+        } catch (error) {
+            console.error('Error during call cleanup:', error);
+            // Still update status even if there's an error
+            setCallStatus(CallStatus.FINISHED);
+        }
     };
 
     const latestMessage = messages[messages.length -1]?.content;
@@ -157,7 +167,7 @@ const Agent = ({userName, userId,type,interviewId,questions}: AgentProps) => {
         )}
     <div className='w-full flex justify-center'>
         {callStatus != 'ACTIVE' ? (
-            <button className='relative btn-call' onClick={handleCall}>
+            <button className='relative btn-call mt-4' onClick={handleCall}>
                 <span className={cn('absolute animate-ping rounded-full opacity-75' , callStatus != 'CONNECTING' && 'hidden')}
                 />
                 <span>
@@ -165,7 +175,7 @@ const Agent = ({userName, userId,type,interviewId,questions}: AgentProps) => {
                 </span>
             </button>
         ) : (
-            <button className='btn-disconnect' onClick={handleDisconnect}>
+            <button className='btn-disconnect mt-4' onClick={handleDisconnect}>
                 End
             </button>
         ) }

@@ -103,48 +103,20 @@ export async function getCurrentUser():Promise<User | null> {
             id: userRecord.id,
         }as User;
     } catch (error) {
-        
+        console.error('Error getting current user:', error);
+        return null;
     }
     
 }
 
 export async function isAuthenticated() {
     const user = await getCurrentUser();
-
     return !!user; 
-    
 }
 
-export async function getInterviewByUserId(userId:string):Promise<Interview[] | null> {
-  const interviews = await db
-  .collection('interviews')
-  .where('userId','==', userId)
-  .orderBy('createdAt','desc')
-  .get();
-  
-  return interviews.docs.map((doc)=> ({
-    id: doc.id,
-    ...doc.data()
-
-  })) as Interview[];
+export async function signOut() {
+    const cookieStore = await cookies();
+    cookieStore.delete('session');
+    return { success: true, message: 'Signed out successfully' };
 }
-
-export async function getLatestInterview(params:GetLatestInterviewsParams):Promise<Interview[] | null> {
-  const { userId, limit = 20 } = params;
-  const interviews = await db
-  .collection('interviews')
-  .orderBy('createdAt','desc')
-  .where('finalized','==',true)
-  .where('userId','!=',userId)
-  .limit(limit)
-  .get();
-  
-  return interviews.docs.map((doc)=> ({
-    id: doc.id,
-    ...doc.data()
-
-  })) as Interview[];
-}
-
-
 

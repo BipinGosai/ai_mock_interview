@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { getCurrentUser} from '@/lib/actions/auth.action'
 import { getInterviewByUserId, getLatestInterview } from '@/lib/actions/general.action'
 import Link from 'next/link'
+import Image from 'next/image'
 import React from 'react'
 
 const page = async() => {
@@ -12,8 +13,8 @@ const page = async() => {
     await getInterviewByUserId(user?.id!),
     await getLatestInterview({userId: user?.id!})
   ]);
-  const hasPastInterviews = userInterviews?.length > 0;
-  const hasUpcomingInterviews = latestInterviews?.length > 0;
+  const hasPastInterviews = userInterviews && userInterviews.length > 0;
+  const hasUpcomingInterviews = latestInterviews && latestInterviews.length > 0;
   return (
    <>
       <section className="card-cta">
@@ -24,7 +25,7 @@ const page = async() => {
             <Link href="/interview">Start an Interview</Link>
           </Button>
         </div>
-        <img src="/robot.png" alt="robo-dude" width={400} height={400} className='max-sm:hidden'/>
+        <Image src="/robot.png" alt="robo-dude" width={400} height={400} className='max-sm:hidden'/>
 
       </section>
       <section className='flex flex-col gap-6 mt-8'>
@@ -54,8 +55,8 @@ const page = async() => {
         </div>
       </section>
    </>
-  )
-}
+  );
+};
 
 export default page
 
